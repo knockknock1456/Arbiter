@@ -1,0 +1,21 @@
+{
+  "name": "arbiter-service",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Off-chain AI court that settles ERC-8183 jobs on Arc.",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "viem": "^2.21.0",
+    "openai": "^4.67.0",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  }
+}
