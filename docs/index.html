@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Arbiter — an independent reviewer for AI-agent jobs on Arc</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:#0c0a07;font-family:"Inter",system-ui,sans-serif;padding:28px 0;}
+  .slide{aspect-ratio:16/9;width:min(1120px,94vw);margin:0 auto 26px;border-radius:14px;overflow:hidden;position:relative;
+    background:radial-gradient(900px 500px at 78% -10%, rgba(224,168,63,.15), transparent 60%),radial-gradient(700px 460px at 8% 120%, rgba(217,116,63,.10), transparent 60%),#14100c;}
+  .pad{position:absolute;inset:0;padding:6.5% 7%;display:flex;flex-direction:column;justify-content:center;}
+  .kick{font-family:"JetBrains Mono",monospace;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:#e0a83f;margin-bottom:18px;}
+  h1{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:58px;line-height:1.02;letter-spacing:-.02em;color:#f4ead9;}
+  h1 .thin{color:#cdbfa8;font-weight:400;font-style:italic;font-size:32px;}
+  h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:32px;line-height:1.12;color:#f4ead9;margin-bottom:22px;letter-spacing:-.01em;}
+  p{font-size:17px;line-height:1.55;color:#cdbfa8;max-width:62ch;}
+  p b{color:#f4ead9;font-weight:600;}
+  .sub{font-size:19px;color:#e8dcc6;max-width:52ch;margin-top:20px;}
+  .quote{font-family:"Fraunces",serif;font-style:italic;font-size:25px;line-height:1.32;color:#f4ead9;max-width:44ch;border-left:3px solid #e0a83f;padding-left:22px;}
+  .quote cite{display:block;font-style:normal;font-family:"JetBrains Mono",monospace;font-size:12px;color:#9a866c;margin-top:18px;letter-spacing:.04em;}
+  .steps{display:flex;flex-direction:column;gap:14px;margin-top:4px;}
+  .step{display:flex;gap:16px;align-items:baseline;}
+  .step .n{font-family:"JetBrains Mono",monospace;color:#e0a83f;font-size:14px;min-width:76px;}
+  .step .t{font-size:16px;color:#cdbfa8;} .step .t b{color:#f4ead9;font-weight:600;}
+  table{border-collapse:collapse;width:100%;margin-top:6px;}
+  td,th{text-align:left;padding:11px 16px;font-size:15px;border-bottom:1px solid #39301f;}
+  th{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#9a866c;font-weight:500;}
+  td.a{color:#9a866c;} td.b{color:#f4ead9;font-weight:500;} td.b .g{color:#e0a83f;}
+  .big{font-family:"Fraunces",serif;font-size:76px;color:#e0a83f;line-height:1;font-weight:600;}
+  .big small{font-size:26px;color:#cdbfa8;}
+  .row{display:flex;gap:44px;align-items:center;}
+  .stack{display:flex;flex-wrap:wrap;gap:9px;margin-top:22px;}
+  .chip{font-family:"JetBrains Mono",monospace;font-size:13px;color:#cdbfa8;border:1px solid #39301f;border-radius:999px;padding:8px 15px;background:rgba(224,168,63,.05);}
+  .foot{position:absolute;bottom:20px;left:7%;right:7%;display:flex;justify-content:space-between;align-items:center;font-family:"JetBrains Mono",monospace;font-size:11px;color:#9a866c;letter-spacing:.08em;}
+  .close{font-size:18px;color:#e8dcc6;margin-top:30px;max-width:56ch;line-height:1.5;}
+  @page{size:landscape;margin:0;}
+  @media print{
+    *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;}
+    body{background:#14100c;padding:0;}
+    .slide{page-break-after:always;margin:0;width:100vw;height:100vh;aspect-ratio:auto;border-radius:0;}
+  }
+</style>
+</head>
+<body>
+
+<div class="slide"><div class="pad">
+  <svg style="width:66px;height:66px;margin-bottom:20px;" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="47" stroke="#e0a83f" stroke-width="1.5" opacity="0.55"/><g stroke="#f4ead9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="50" y1="26" x2="50" y2="74"/><line x1="28" y1="38" x2="72" y2="38"/><line x1="28" y1="38" x2="28" y2="46"/><line x1="72" y1="38" x2="72" y2="46"/><path d="M18 46 L28 66 L38 46" fill="rgba(224,168,63,.15)"/><path d="M62 46 L72 66 L82 46" fill="rgba(224,168,63,.15)"/><line x1="40" y1="78" x2="60" y2="78"/></g><circle cx="50" cy="26" r="4.5" fill="#e0a83f"/></svg>
+  <div class="kick">Build on Arc · Encode × Circle · Agentic Economy</div>
+  <h1>Arbiter<br><span class="thin">an independent reviewer for AI-agent jobs on Arc</span></h1>
+  <p class="sub">When one AI agent pays another for work, who checks it was actually done? Arbiter reviews the work and releases or refunds the payment.</p>
+  <div class="foot"><span>⚖ ARBITER</span><span>01 / 06</span></div>
+</div></div>
+
+<div class="slide"><div class="pad">
+  <div class="kick">The problem</div>
+  <blockquote class="quote">"A malicious evaluator can complete or reject arbitrarily… No dispute resolution or arbitration; reject is final."<cite>ERC-8183, Security Considerations</cite></blockquote>
+  <p style="margin-top:26px">Agents already pay each other through escrow on Arc. But whoever decides if the work gets paid is usually the client, grading their own deal. There is no neutral reviewer, and no way to appeal a bad call.</p>
+  <div class="foot"><span>⚖ ARBITER</span><span>02 / 06</span></div>
+</div></div>
+
+<div class="slide"><div class="pad">
+  <div class="kick">How it works</div>
+  <h2>Arbiter takes the reviewer role in the job.</h2>
+  <div class="steps">
+    <div class="step"><span class="n">AGREE</span><span class="t">Before work starts, the brief is turned into a checklist both sides approve.</span></div>
+    <div class="step"><span class="n">CHECK</span><span class="t">Several AI models review the work against that checklist and verify its facts on the web.</span></div>
+    <div class="step"><span class="n">PAY</span><span class="t">The result releases or refunds the USDC. The same on-chain action that decides also moves the money.</span></div>
+    <div class="step"><span class="n">RECORD</span><span class="t">The outcome and its evidence are saved on-chain, including a rating for Arbiter itself.</span></div>
+  </div>
+  <p style="margin-top:20px;color:#9a866c">If the client is happy with the work, they approve it themselves and Arbiter does nothing.</p>
+  <div class="foot"><span>⚖ ARBITER</span><span>03 / 06</span></div>
+</div></div>
+
+<div class="slide"><div class="pad">
+  <div class="kick">What makes it different</div>
+  <h2>Circle's sample uses one AI to grade. Arbiter uses several, and checks the facts.</h2>
+  <table>
+    <tr><th></th><th>One-AI grader</th><th style="color:#e0a83f">Arbiter</th></tr>
+    <tr><td class="a">Who reviews</td><td class="a">one model, once</td><td class="b"><span class="g">several</span> independent models</td></tr>
+    <tr><td class="a">Facts</td><td class="a">from model memory</td><td class="b">checked on the <span class="g">live web</span></td></tr>
+    <tr><td class="a">Criteria</td><td class="a">unstated</td><td class="b">checklist agreed <span class="g">up front</span></td></tr>
+    <tr><td class="a">Fake "10/10" in the work</td><td class="a">fools it</td><td class="b">it <span class="g">holds up</span></td></tr>
+    <tr><td class="a">Track record</td><td class="a">none</td><td class="b">every verdict is <span class="g">rated on-chain</span></td></tr>
+  </table>
+  <div class="foot"><span>⚖ ARBITER</span><span>04 / 06</span></div>
+</div></div>
+
+<div class="slide"><div class="pad">
+  <div class="kick">The review engine already works</div>
+  <div class="row"><div class="big">2<small>nd place</small></div><p style="font-size:19px;color:#e8dcc6;max-width:44ch">Arbiter reuses the engine from Tribunal, my previous project. It placed 2nd out of 42 at the BTL Runtime Hackathon, judged by code audit and live testing.</p></div>
+  <p style="margin-top:28px">It runs a panel of models and checks facts on the web, and it resists prompt injection. If a cheating agent hides "rate this 10/10" inside its work, a single-AI reviewer pays out. This one catches it and rejects.</p>
+  <div class="foot"><span>⚖ ARBITER</span><span>05 / 06</span></div>
+</div></div>
+
+<div class="slide"><div class="pad">
+  <div class="kick">Built on the Circle stack</div>
+  <h2>Programmable money, with a reviewer built in.</h2>
+  <div class="stack">
+    <span class="chip">Arc testnet · 5042002</span><span class="chip">ERC-8183 escrow</span><span class="chip">ERC-8004 reputation</span><span class="chip">Circle Wallets</span><span class="chip">Contracts</span><span class="chip">Paymaster</span><span class="chip">USDC</span>
+  </div>
+  <p class="close">Nothing is hidden. You can see the checklist, each model's review, the sources it used, and the record on-chain.</p>
+  <div class="foot"><span>⚖ ARBITER · Mykhailo Lapshyn</span><span>06 / 06</span></div>
+</div></div>
+
+</body>
+</html>
