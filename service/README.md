@@ -1,23 +1,26 @@
-# service/ — the off-chain judge
+# service/ — the court
 
-Node + TypeScript. This is Arbiter's brain. It:
-1. watches the ERC-8183 contract for `JobSubmitted`,
-2. pulls the brief (job description) and the deliverable,
-3. runs the **engine** (`src/engine/`) — the ported Tribunal pipeline,
-4. sends the verdict transaction via `src/chain/evaluator.ts`.
+Node + TypeScript-free ESM. Everything Arbiter does at runtime lives here.
 
 ```
-src/
-├── index.ts            entrypoint: wire watcher → engine → settlement
-├── watcher.ts          subscribe to JobSubmitted, dispatch each job
-├── engine/             THE TRIBUNAL PORT (already-proven core)
-│   ├── checklist.ts    brief → acceptance checklist
-│   ├── panel.ts        N independent models judge each item
-│   ├── verify.ts       fact-check the deliverable's claims vs live web
-│   └── judge.ts        synthesise pass/fail + evidence report
-└── chain/
-    ├── arc.ts          viem client + Arc testnet addresses
-    └── evaluator.ts    build & send complete/reject as the evaluator
+src/engine/     checklist.js  brief -> acceptance criteria
+                review.js     N independent models rule on each criterion
+                factcheck.js  the work's claims vs live web sources
+                verdict.js    one accept/reject + evidence report (+ hash)
+src/chain/      arc.js        Arc testnet client (retries, gentle polling)
+                abi.js        ERC-8183 + ERC-20 ABIs
+                watch.js      listen for JobSubmitted on jobs we evaluate
+                settle.js     send complete() / reject() — this moves the USDC
+public/         the courtroom UI
+server.js       web server, streams a hearing over SSE
+live-demo.js    full loop on Arc testnet
+chain-check.js  connection diagnostics
+smoke.js        offline hearings on sample work
 ```
 
-Run (once implemented): `npm install && npm run dev`
+```bash
+npm install
+npm run smoke        # no chain, no wallet needed
+npm start            # UI on :4000
+node live-demo.js    # the real thing on Arc testnet
+```

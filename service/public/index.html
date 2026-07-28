@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Arbiter — a court for AI-agent work</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;450;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#100d09; --panel:#191410; --panel2:#1f1913; --line:#2e251b; --line2:#3d3123;
+    --ink:#f6ecdb; --ink2:#c9b99f; --ink3:#8d7d66;
+    --gold:#e0a83f; --golddim:rgba(224,168,63,.12);
+    --ok:#7fb069; --okdim:rgba(127,176,105,.13);
+    --bad:#d9634a; --baddim:rgba(217,99,74,.13);
+    --warn:#d99b3f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-font-smoothing:antialiased;}
+  body{background:var(--bg);color:var(--ink);font-family:"Inter",system-ui,sans-serif;font-size:15px;line-height:1.55;
+    background-image:radial-gradient(900px 420px at 82% -8%,rgba(224,168,63,.10),transparent 65%);min-height:100vh;}
+  .wrap{max-width:1120px;margin:0 auto;padding:22px 26px 70px;}
+  .hidden{display:none!important;}
+  .fade{animation:fade .45s ease both;} @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .pulse{animation:pl 1.2s ease-in-out infinite;} @keyframes pl{0%,100%{opacity:.45}50%{opacity:1}}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line);}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand b{font-family:"Fraunces",serif;font-size:19px;letter-spacing:.04em;font-weight:600;}
+  .brand .sub{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink3);letter-spacing:.16em;text-transform:uppercase;margin-top:2px;}
+  .chip{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--ink2);background:var(--panel);
+    border:1px solid var(--line);border-radius:999px;padding:6px 12px;}
+
+  .hero{text-align:center;padding:44px 0 30px;}
+  .hero h1{font-family:"Fraunces",serif;font-weight:600;font-size:40px;line-height:1.1;letter-spacing:-.02em;}
+  .hero p{color:var(--ink2);font-size:16.5px;max-width:56ch;margin:14px auto 0;}
+  .hero .q{font-family:"Fraunces",serif;font-style:italic;color:var(--ink3);font-size:14px;margin-top:18px;}
+
+  .picker{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:26px 0 8px;}
+  .case{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 18px;cursor:pointer;
+    color:var(--ink2);font-size:14px;font-family:inherit;transition:.15s;text-align:left;min-width:190px;}
+  .case:hover{border-color:var(--line2);color:var(--ink);}
+  .case.on{border-color:var(--gold);background:var(--golddim);color:var(--ink);}
+  .case .t{font-weight:500;} .case .d{font-size:11.5px;color:var(--ink3);margin-top:3px;}
+  .go{display:block;margin:20px auto 0;background:var(--gold);color:#160f05;border:0;border-radius:11px;
+    padding:13px 30px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;transition:.15s;}
+  .go:hover{background:#f0bb55;} .go:disabled{opacity:.45;cursor:default;}
+
+  .stage{display:grid;grid-template-columns:1fr 330px;gap:16px;margin-top:36px;align-items:start;}
+  @media(max-width:920px){.stage{grid-template-columns:1fr;}}
+  .col{display:flex;flex-direction:column;gap:14px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px 19px;}
+  .lab{font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink3);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+  .lab .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);}
+
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  @media(max-width:700px){.two{grid-template-columns:1fr;}}
+  .doc{font-size:14px;color:var(--ink2);line-height:1.6;white-space:pre-wrap;max-height:150px;overflow:auto;}
+  .doc.work{border-left:2px solid var(--line2);padding-left:12px;}
+
+  .ci{display:flex;gap:11px;padding:9px 0;border-top:1px solid var(--line);align-items:flex-start;}
+  .ci:first-child{border-top:0;}
+  .ci .k{font-family:"JetBrains Mono",monospace;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink3);border:1px solid var(--line2);border-radius:5px;padding:2px 6px;margin-top:2px;white-space:nowrap;}
+  .ci .k.obj{color:var(--gold);border-color:rgba(224,168,63,.35);}
+  .ci .x{font-size:14px;color:var(--ink);}
+
+  .rev{border:1px solid var(--line);border-radius:12px;padding:13px 15px;background:var(--panel2);}
+  .rev .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px;}
+  .rev .nm{font-family:"JetBrains Mono",monospace;font-size:12.5px;color:var(--ink);}
+  .pill{font-size:10.5px;font-weight:600;padding:4px 10px;border-radius:999px;white-space:nowrap;letter-spacing:.04em;}
+  .p-accept{background:var(--okdim);color:var(--ok);border:1px solid rgba(127,176,105,.3);}
+  .p-reject{background:var(--baddim);color:var(--bad);border:1px solid rgba(217,99,74,.3);}
+  .p-wait{background:var(--golddim);color:var(--gold);border:1px solid rgba(224,168,63,.25);}
+  .p-fail{background:rgba(141,125,102,.12);color:var(--ink3);border:1px solid var(--line2);}
+  .rev .fi{font-size:12.5px;color:var(--ink2);padding:4px 0 4px 16px;position:relative;}
+  .rev .fi:before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;}
+  .rev .fi.met:before{background:var(--ok);} .rev .fi.un:before{background:var(--bad);}
+  .rev .cf{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink3);}
+
+  .claim{padding:10px 0;border-top:1px solid var(--line);}
+  .claim:first-child{border-top:0;}
+  .claim .c{font-size:13.5px;color:var(--ink);}
+  .claim .n{font-size:12px;color:var(--ink3);margin-top:3px;}
+  .src{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;}
+  .src a{font-size:11px;color:var(--gold);text-decoration:none;background:var(--golddim);
+    border:1px solid rgba(224,168,63,.2);border-radius:6px;padding:3px 9px;}
+
+  .verdict{border:1px solid var(--line2);border-radius:14px;padding:22px;text-align:center;background:var(--panel2);}
+  .verdict.acc{border-color:rgba(127,176,105,.45);background:linear-gradient(180deg,var(--okdim),transparent);}
+  .verdict.rej{border-color:rgba(217,99,74,.45);background:linear-gradient(180deg,var(--baddim),transparent);}
+  .verdict .big{font-family:"Fraunces",serif;font-size:34px;font-weight:600;letter-spacing:-.01em;}
+  .verdict.acc .big{color:var(--ok);} .verdict.rej .big{color:var(--bad);}
+  .verdict .sm{color:var(--ink2);font-size:14.5px;margin-top:10px;line-height:1.55;}
+  .flagline{margin-top:14px;font-size:12.5px;color:var(--warn);background:rgba(217,155,63,.1);
+    border:1px solid rgba(217,155,63,.3);border-radius:9px;padding:8px 12px;display:inline-block;}
+  .hashline{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--ink3);margin-top:14px;word-break:break-all;}
+
+  .money{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px;}
+  .tile{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px;text-align:center;}
+  .tile .n{font-family:"Fraunces",serif;font-size:17px;color:var(--ink);}
+  .tile .k{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-top:3px;}
+  .flow{font-size:12.5px;color:var(--ink2);line-height:1.9;}
+  .flow .s{display:flex;align-items:center;gap:9px;}
+  .flow .b{width:18px;height:18px;border-radius:50%;border:1px solid var(--line2);display:grid;place-items:center;
+    font-family:"JetBrains Mono",monospace;font-size:9px;color:var(--ink3);flex:none;}
+  .flow .s.on .b{border-color:var(--gold);color:var(--gold);}
+  .flow .s.on{color:var(--ink);}
+  .note{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:12px;}
+  .foot{text-align:center;color:var(--ink3);font-size:12.5px;margin-top:46px;font-family:"Fraunces",serif;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="50" r="46" stroke="#e0a83f" stroke-width="2" opacity=".5"/>
+        <g stroke="#f6ecdb" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="50" y1="27" x2="50" y2="73"/><line x1="29" y1="38" x2="71" y2="38"/>
+          <path d="M20 46 L29 64 L38 46" fill="rgba(224,168,63,.18)"/>
+          <path d="M62 46 L71 64 L80 46" fill="rgba(224,168,63,.18)"/>
+        </g>
+        <circle cx="50" cy="27" r="5" fill="#e0a83f"/>
+      </svg>
+      <div><b>Arbiter</b><div class="sub">court for agent work · arc</div></div>
+    </div>
+    <div class="chip" id="panelChip">connecting…</div>
+  </nav>
+
+  <section class="hero">
+    <h1>Who decides the work was done?</h1>
+    <p>On Arc, one AI agent can pay another through escrow. Arbiter is the neutral reviewer that reads the delivered work, judges it against agreed criteria, and releases or refunds the money.</p>
+    <div class="q">"No dispute resolution or arbitration; reject is final." — ERC-8183, Security Considerations</div>
+    <div class="picker" id="picker"></div>
+    <button class="go" id="go">Open the hearing</button>
+  </section>
+
+  <main class="stage hidden" id="stage">
+    <div class="col">
+      <div class="card">
+        <div class="lab"><span class="dot"></span> The case</div>
+        <div class="two">
+          <div><div class="lab" style="margin-bottom:7px">Brief</div><div class="doc" id="brief"></div></div>
+          <div><div class="lab" style="margin-bottom:7px">Delivered work</div><div class="doc work" id="work"></div></div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="clBox">
+        <div class="lab"><span class="dot"></span> Agreed acceptance criteria</div>
+        <div id="cl"></div>
+      </div>
+
+      <div class="card hidden" id="revBox">
+        <div class="lab"><span class="dot"></span> The panel</div>
+        <div id="revs" style="display:flex;flex-direction:column;gap:11px"></div>
+      </div>
+
+      <div class="card hidden" id="fcBox">
+        <div class="lab"><span class="dot"></span> Fact-check</div>
+        <div id="claims"></div>
+      </div>
+
+      <div class="verdict hidden" id="vBox">
+        <div class="big" id="vBig"></div>
+        <div class="sm" id="vSum"></div>
+        <div id="vFlag"></div>
+        <div class="hashline" id="vHash"></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <div class="lab"><span class="dot"></span> Hearing</div>
+        <div class="flow" id="flow">
+          <div class="s" data-k="brief"><span class="b">1</span> case opened</div>
+          <div class="s" data-k="checklist"><span class="b">2</span> criteria agreed</div>
+          <div class="s" data-k="review"><span class="b">3</span> panel reviewing</div>
+          <div class="s" data-k="claim"><span class="b">4</span> facts checked</div>
+          <div class="s" data-k="verdict"><span class="b">5</span> verdict &amp; settlement</div>
+        </div>
+        <div class="money">
+          <div class="tile"><div class="n" id="mRev">0</div><div class="k">reviewers</div></div>
+          <div class="tile"><div class="n" id="mCl">0</div><div class="k">criteria</div></div>
+          <div class="tile"><div class="n" id="mFc">0</div><div class="k">claims</div></div>
+          <div class="tile"><div class="n" id="mT">0s</div><div class="k">elapsed</div></div>
+        </div>
+        <div class="note">The verdict is the settlement: the same on-chain call releases the USDC to the provider or refunds the client, with the report hash stored as the reason.</div>
+      </div>
+
+      <div class="card">
+        <div class="lab"><span class="dot"></span> On-chain</div>
+        <div class="flow">
+          <div class="s"><span class="b">◆</span> Arc testnet · 5042002</div>
+          <div class="s"><span class="b">◆</span> ERC-8183 escrow</div>
+          <div class="s"><span class="b">◆</span> ERC-8004 reputation</div>
+        </div>
+        <div class="note" id="chainNote">Settlement is sent by the evaluator wallet once a verdict is reached.</div>
+      </div>
+    </div>
+  </main>
+
+  <p class="foot">Nothing is hidden: the criteria, every reviewer, the sources, and the record on-chain.</p>
+</div>
+
+<script>
+const $=(id)=>document.getElementById(id);
+let CASES=[], picked='good', busy=false, t0=0, timer=null;
+
+(async function init(){
+  try{
+    CASES=await (await fetch('/api/cases')).json();
+    $('picker').innerHTML='';
+    CASES.forEach((c,i)=>{
+      const b=document.createElement('button');
+      b.className='case'+(i===0?' on':'');
+      b.innerHTML=`<div class="t">${c.label}</div><div class="d">${c.work.split('\n')[0].slice(0,46)}…</div>`;
+      b.onclick=()=>{ picked=c.id; document.querySelectorAll('.case').forEach(e=>e.classList.remove('on')); b.classList.add('on'); };
+      $('picker').appendChild(b);
+    });
+  }catch{ $('picker').innerHTML='<span style="color:var(--ink3)">server offline</span>'; }
+})();
+
+$('go').onclick=run;
+
+function reset(){
+  ['clBox','revBox','fcBox','vBox'].forEach(id=>$(id).classList.add('hidden'));
+  $('cl').innerHTML=''; $('revs').innerHTML=''; $('claims').innerHTML=''; $('vFlag').innerHTML='';
+  ['mRev','mCl','mFc'].forEach(id=>$(id).textContent='0'); $('mT').textContent='0s';
+  document.querySelectorAll('.flow .s').forEach(s=>s.classList.remove('on'));
+  $('vBox').className='verdict hidden';
+}
+function step(k){ const el=document.querySelector(`.flow .s[data-k="${k}"]`); if(el) el.classList.add('on'); }
+
+async function run(){
+  if(busy) return; busy=true; $('go').disabled=true; $('go').textContent='In session…';
+  $('stage').classList.remove('hidden'); reset();
+  t0=Date.now(); clearInterval(timer);
+  timer=setInterval(()=>$('mT').textContent=((Date.now()-t0)/1000).toFixed(0)+'s',200);
+
+  const es=new EventSource('/api/hear?case='+picked);
+  let nRev=0, nCl=0;
+
+  es.addEventListener('start',e=>{
+    const d=JSON.parse(e.data);
+    $('brief').textContent=d.brief; $('work').textContent=d.work;
+    $('panelChip').textContent=d.panel.length+' reviewers · judge '+d.judge.split('/').pop();
+    step('brief');
+  });
+
+  es.addEventListener('checklist',e=>{
+    const d=JSON.parse(e.data);
+    $('clBox').classList.remove('hidden'); $('clBox').classList.add('fade');
+    d.items.forEach(i=>{
+      const r=document.createElement('div'); r.className='ci';
+      r.innerHTML=`<span class="k ${i.kind==='objective'?'obj':''}">${i.kind}</span><span class="x">${i.text}</span>`;
+      $('cl').appendChild(r);
+    });
+    $('mCl').textContent=d.items.length; step('checklist');
+  });
+
+  es.addEventListener('review',e=>{
+    const d=JSON.parse(e.data);
+    $('revBox').classList.remove('hidden');
+    const el=document.createElement('div'); el.className='rev fade';
+    const pill=!d.ok?'<span class="pill p-fail">unavailable</span>'
+      :`<span class="pill p-${d.verdict}">${d.verdict}</span>`;
+    el.innerHTML=`<div class="top"><span class="nm">${d.model}</span>${pill}</div>`+
+      (d.ok?`<div class="cf">confidence ${d.confidence}% · ${(d.latencyMs/1000).toFixed(1)}s</div>`:'')+
+      (d.items||[]).map(i=>`<div class="fi ${i.met?'met':'un'}">${i.why||('criterion '+i.id)}</div>`).join('');
+    $('revs').appendChild(el);
+    if(d.ok) $('mRev').textContent=++nRev;
+    step('review');
+  });
+
+  es.addEventListener('claim',e=>{
+    const d=JSON.parse(e.data);
+    $('fcBox').classList.remove('hidden');
+    const el=document.createElement('div'); el.className='claim fade';
+    const col=d.status==='confirmed'?'var(--ok)':(d.status==='unverifiable'?'var(--ink3)':'var(--bad)');
+    el.innerHTML=`<div class="c">${d.claim}</div><div class="n" style="color:${col}">${d.status}${d.note?' · '+d.note:''}</div>`+
+      ((d.sources||[]).length?`<div class="src">${d.sources.map(s=>`<a href="${s.url}" target="_blank" rel="noopener">${(s.title||s.url).slice(0,38)}</a>`).join('')}</div>`:'');
+    $('claims').appendChild(el);
+    $('mFc').textContent=++nCl; step('claim');
+  });
+
+  es.addEventListener('verdict',e=>{
+    const d=JSON.parse(e.data);
+    const b=$('vBox'); b.className='verdict fade '+(d.accepted?'acc':'rej');
+    $('vBig').textContent=d.accepted?'Accepted — payment released':'Rejected — payment refunded';
+    $('vSum').textContent=d.summary;
+    if(d.manipulationDetected) $('vFlag').innerHTML='<div class="flagline">The work tried to instruct the reviewer. Flagged as manipulation.</div>';
+    $('vHash').textContent='report hash '+d.reportHash;
+    $('mT').textContent=(d.elapsedMs/1000).toFixed(0)+'s';
+    step('verdict');
+  });
+
+  const finish=()=>{ es.close(); clearInterval(timer); busy=false; $('go').disabled=false; $('go').textContent='Open the hearing'; };
+  es.addEventListener('done',finish);
+  es.addEventListener('error',finish);
+}
+</script>
+</body>
+</html>

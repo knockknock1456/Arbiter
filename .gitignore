@@ -6,7 +6,5 @@ build/
 out/
 cache/
 artifacts/
-broadcast/
 *.log
 .DS_Store
-coverage/
