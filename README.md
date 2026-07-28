@@ -31,6 +31,20 @@ A full hearing ran end to end on Arc testnet: job created, escrow funded, work s
 
 Job `#159723` on the ERC-8183 reference contract `0x0747EEf0706327138c69792bF28Cd525089e4583`.
 
+## Try it in the browser
+
+`npm start` opens a courtroom on `localhost:4000`. You type the job the way a
+client would write it, paste what the provider delivered, and pick a mode:
+
+- **Demo** — the review only. No wallet, no chain.
+- **Live on Arc** — creates a real job on Arc testnet with Arbiter as the
+  evaluator, funds the escrow, submits the work, holds the hearing, and settles
+  the USDC. Every transaction appears with a link to ArcScan as it lands.
+
+> In the demo one wallet plays all three roles (client, provider, arbiter).
+> In production these are three independent participants; Arbiter's part of the
+> flow is identical either way.
+
 ## How a hearing works
 
 ```
@@ -106,6 +120,13 @@ Arc testnet (`5042002`) · ERC-8183 job escrow · ERC-8004 reputation (planned) 
 
 ## Honest notes
 
+- In the demo, client / provider / arbiter are the same wallet. The mechanics
+  are real; the counterparties are not.
+- Only the hash of the delivered work goes on-chain (that is what ERC-8183
+  stores). The content itself is passed to the reviewers off-chain.
+- Arbiter judges work that can be read: research, reports, data, spec-bound
+  content. Judging running software (does the bot actually work?) is a
+  different problem and is out of scope for v1.
 - The reference ERC-8183 contract does not include an evaluator fee, so Arbiter's revenue would be its own layer (a dispute deposit paid by the losing side), not something "built into the standard".
 - The public Arc RPC rate-limits aggressively; a private endpoint is recommended for heavier use.
 - Reputation writes to ERC-8004 are designed but not yet wired.

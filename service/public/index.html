@@ -108,6 +108,26 @@
   .flow .s.on .b{border-color:var(--gold);color:var(--gold);}
   .flow .s.on{color:var(--ink);}
   .note{font-size:11.5px;color:var(--ink3);line-height:1.5;margin-top:12px;}
+  .mode{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:11px;padding:4px;gap:4px;margin-bottom:18px;}
+  .mode button{background:none;border:0;color:var(--ink3);font-family:inherit;font-size:13px;padding:8px 16px;border-radius:8px;cursor:pointer;}
+  .mode button.on{background:var(--golddim);color:var(--gold);}
+  .modehint{font-size:12.5px;color:var(--ink3);margin-bottom:6px;}
+  .tx{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line);font-size:12.5px;}
+  .tx:first-child{border-top:0;}
+  .tx .l{color:var(--ink2);flex:none;min-width:104px;}
+  .tx a{color:var(--gold);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:11px;overflow:hidden;text-overflow:ellipsis;}
+  .tx .st{margin-left:auto;font-size:10px;font-family:"JetBrains Mono",monospace;color:var(--ok);}
+  .tx .st.pending{color:var(--warn);}
+  .phase{font-size:12.5px;color:var(--gold);margin-top:10px;font-family:"JetBrains Mono",monospace;}
+  .jobline{font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--ink2);margin-top:8px;}
+  .form{max-width:760px;margin:20px auto 0;text-align:left;}
+  .form label{display:block;font-family:"JetBrains Mono",monospace;font-size:10.5px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ink3);margin:14px 0 7px;}
+  .form textarea{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:11px;
+    color:var(--ink);font-family:inherit;font-size:14px;line-height:1.55;padding:13px 15px;resize:vertical;outline:none;}
+  .form textarea:focus{border-color:var(--gold);}
+  .form textarea::placeholder{color:var(--ink3);}
+  .form .hint{font-size:11.5px;color:var(--ink3);margin-top:6px;}
   .foot{text-align:center;color:var(--ink3);font-size:12.5px;margin-top:46px;font-family:"Fraunces",serif;font-style:italic;}
 </style>
 </head>
@@ -134,7 +154,19 @@
     <h1>Who decides the work was done?</h1>
     <p>On Arc, one AI agent can pay another through escrow. Arbiter is the neutral reviewer that reads the delivered work, judges it against agreed criteria, and releases or refunds the money.</p>
     <div class="q">"No dispute resolution or arbitration; reject is final." — ERC-8183, Security Considerations</div>
-    <div class="picker" id="picker"></div>
+    <div class="mode">
+      <button id="mDemo" class="on">Demo</button>
+      <button id="mLive">Live on Arc</button>
+    </div>
+    <div class="modehint" id="modehint">Runs the review only — no chain, no wallet needed.</div>
+    <div class="form" id="form">
+      <label>The job — what the client is paying for</label>
+      <textarea id="fBrief" rows="3" placeholder="e.g. Write a 300-word article about dog training: cover three commands, name one common mistake, and cite a source."></textarea>
+      <div class="hint">In a real job this text lives on-chain, in the job's description field. Arbiter reads it from there and turns it into acceptance criteria.</div>
+      <label>The delivered work — what the provider submitted</label>
+      <textarea id="fWork" rows="6" placeholder="Paste the work here."></textarea>
+      <div class="hint">On-chain only its hash is stored; the content is passed to the reviewers.</div>
+    </div>
     <button class="go" id="go">Open the hearing</button>
   </section>
 
@@ -190,6 +222,13 @@
         <div class="note">The verdict is the settlement: the same on-chain call releases the USDC to the provider or refunds the client, with the report hash stored as the reason.</div>
       </div>
 
+      <div class="card hidden" id="txBox">
+        <div class="lab"><span class="dot"></span> On-chain activity</div>
+        <div id="txs"></div>
+        <div class="jobline" id="jobline"></div>
+        <div class="phase" id="phase"></div>
+      </div>
+
       <div class="card">
         <div class="lab"><span class="dot"></span> On-chain</div>
         <div class="flow">
@@ -207,40 +246,67 @@
 
 <script>
 const $=(id)=>document.getElementById(id);
-let CASES=[], picked='good', busy=false, t0=0, timer=null;
+let CASES=[], picked='good', busy=false, t0=0, timer=null, LIVE=false, EXPLORER='https://testnet.arcscan.app';
 
 (async function init(){
+  picked = 'custom';
+  $('form').classList.add('on');
   try{
-    CASES=await (await fetch('/api/cases')).json();
-    $('picker').innerHTML='';
-    CASES.forEach((c,i)=>{
-      const b=document.createElement('button');
-      b.className='case'+(i===0?' on':'');
-      b.innerHTML=`<div class="t">${c.label}</div><div class="d">${c.work.split('\n')[0].slice(0,46)}…</div>`;
-      b.onclick=()=>{ picked=c.id; document.querySelectorAll('.case').forEach(e=>e.classList.remove('on')); b.classList.add('on'); };
-      $('picker').appendChild(b);
-    });
-  }catch{ $('picker').innerHTML='<span style="color:var(--ink3)">server offline</span>'; }
+    const cs = await (await fetch('/api/cases')).json();
+    // Presets stay available under the hood (?case=good|thin|cheating) but the
+    // page shows one thing: write your own job.
+    const seed = cs.find((c) => c.id === 'good');
+    if (seed) {
+      $('fBrief').value = seed.brief;
+      $('fWork').value = seed.work;
+    }
+  }catch{ /* server offline — the form still works once it is up */ }
 })();
+
+$('mDemo').onclick=()=>setMode(false);
+$('mLive').onclick=()=>setMode(true);
+function setMode(live){
+  LIVE=live;
+  $('mDemo').classList.toggle('on',!live); $('mLive').classList.toggle('on',live);
+  $('modehint').textContent = live
+    ? 'Creates a real job on Arc testnet, funds escrow, judges it and settles the USDC on-chain.'
+    : 'Runs the review only — no chain, no wallet needed.';
+  $('go').textContent = live ? 'Run a live hearing on Arc' : 'Open the hearing';
+}
+fetch('/api/wallet').then(r=>r.json()).then(w=>{ if(w.explorer) EXPLORER=w.explorer; }).catch(()=>{});
 
 $('go').onclick=run;
 
 function reset(){
   ['clBox','revBox','fcBox','vBox'].forEach(id=>$(id).classList.add('hidden'));
   $('cl').innerHTML=''; $('revs').innerHTML=''; $('claims').innerHTML=''; $('vFlag').innerHTML='';
-  ['mRev','mCl','mFc'].forEach(id=>$(id).textContent='0'); $('mT').textContent='0s';
+  ['mRev','mCl','mFc'].forEach(id=>$(id).textContent='0');
+  $('txs').innerHTML=''; $('jobline').textContent=''; $('phase').textContent='';
+  $('txBox').classList.toggle('hidden',!LIVE); $('mT').textContent='0s';
   document.querySelectorAll('.flow .s').forEach(s=>s.classList.remove('on'));
   $('vBox').className='verdict hidden';
 }
 function step(k){ const el=document.querySelector(`.flow .s[data-k="${k}"]`); if(el) el.classList.add('on'); }
 
 async function run(){
-  if(busy) return; busy=true; $('go').disabled=true; $('go').textContent='In session…';
+  if(busy) return;
+  let caseId=picked;
+  if(picked==='custom'){
+    const brief=$('fBrief').value.trim(), work=$('fWork').value.trim();
+    if(!brief||!work){ alert('Fill in both the job and the delivered work.'); return; }
+    try{
+      const r=await (await fetch('/api/case',{method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({brief,work})})).json();
+      if(!r.id) throw new Error(r.error||'bad case');
+      caseId=r.id;
+    }catch(e){ alert('Could not start: '+e.message); return; }
+  }
+  busy=true; $('go').disabled=true; $('go').textContent='In session…';
   $('stage').classList.remove('hidden'); reset();
   t0=Date.now(); clearInterval(timer);
   timer=setInterval(()=>$('mT').textContent=((Date.now()-t0)/1000).toFixed(0)+'s',200);
 
-  const es=new EventSource('/api/hear?case='+picked);
+  const es=new EventSource((LIVE?'/api/live?case=':'/api/hear?case=')+caseId);
   let nRev=0, nCl=0;
 
   es.addEventListener('start',e=>{
@@ -295,6 +361,28 @@ async function run(){
     $('vHash').textContent='report hash '+d.reportHash;
     $('mT').textContent=(d.elapsedMs/1000).toFixed(0)+'s';
     step('verdict');
+  });
+
+  es.addEventListener('phase',e=>{ $('phase').textContent='› '+JSON.parse(e.data).text; });
+
+  es.addEventListener('job',e=>{
+    const d=JSON.parse(e.data);
+    $('jobline').textContent=`job #${d.jobId} · escrow ${d.budget} USDC`;
+  });
+
+  es.addEventListener('tx',e=>{
+    const d=JSON.parse(e.data);
+    $('txBox').classList.remove('hidden');
+    const el=document.createElement('div'); el.className='tx fade';
+    el.innerHTML=`<span class="l">${d.label}</span>`+
+      `<a href="${EXPLORER}/tx/${d.hash}" target="_blank" rel="noopener">${d.hash.slice(0,14)}…${d.hash.slice(-6)}</a>`+
+      `<span class="st ${d.status!=='success'?'pending':''}">${d.status}</span>`;
+    $('txs').appendChild(el);
+  });
+
+  es.addEventListener('settled',e=>{
+    const d=JSON.parse(e.data);
+    $('phase').innerHTML=`› settled on-chain · <a href="${d.explorer}" target="_blank" rel="noopener" style="color:var(--gold)">view transaction</a>`;
   });
 
   const finish=()=>{ es.close(); clearInterval(timer); busy=false; $('go').disabled=false; $('go').textContent='Open the hearing'; };
